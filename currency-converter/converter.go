@@ -4,52 +4,61 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	s "strings"
 )
 
+const expectedArgs int = 4
+const expectedCurrencyCodeLength int = 3
+
 func main() {
-	fmt.Println("Welcome to the currency converter")
 	/*
 		USAGE:
-		convert [from] [to] [amount]
+		converter [from] [to] [amount]
 		[from]: {string} - ISO 4217 currency code converting from
 		[to]: {string} - ISO 4217 currency code converting to
 		[amount]: {float64} - amount we are trying to convert
 	*/
+	fmt.Println("Welcome to the currency converter")
 	var p = fmt.Println
-	// out:
-	// 	for {
-	// 		var input string
-	// 		fmt.Scanln(&input)
-	// 		switch s.ToLower(input) {
-	// 		case "q":
-	// 			p("Exiting program")
-	// 			break out
-	// 		default:
-	// 			p("Please enter a valid command")
-	// 		}
-	// 	}
+	to, from, amount := getArguments()
+	var currencyNameMap map[string]string = getCurrencyMap()
+	fromName := currencyNameMap[s.ToUpper(from)]
+	toName := currencyNameMap[s.ToUpper(to)]
+	p(amount)
+	// TODO: ADD ERROR HANDLING
+	if fromName == "" {
+		p("Could not find valid 'from' currency code corresponding to code: ", from)
+	}
+	if toName == "" {
+		p("Could not find valid 'to' currency code corresponding to code: ", to)
+	}
+	// var exchangeRateMap map[string]map[string]float64 = getCurrencyExchangeRateMap()
+	// fromExchangeRateMap := exchangeRateMap
+}
+func getArguments() (string, string, float64) {
 	args := os.Args
-	var from string = string(args[1])
-	var to string = string(args[2])
+	argCount := len(args)
+	// Check correct no. of args
+	if argCount != expectedArgs {
+		panic("Unexpected number of arguments")
+	}
+	var from string = args[1]
+	if len(from) != expectedCurrencyCodeLength {
+		panic("The 'from' argument is not a valid ISO 4217 currency code.")
+	}
+	var to string = args[2]
+	if len(to) != expectedCurrencyCodeLength {
+		panic("The 'to' argument is not a valid ISO 4217 currency code.")
+	}
 	amount, floatParseErr := strconv.ParseFloat(args[3], 64)
 	if floatParseErr != nil {
-		p(floatParseErr)
+		panic(floatParseErr)
 	}
-	expectedArgs := 4
-	p(len(args))
-	p(args[0])
-	// args, err := fmt.Scanf(from, to, amount)
-	if len(args) != 4 {
-		p("Expected", expectedArgs, "arguments, got", len(args))
-	} else {
-		p(from, to, amount)
+	if amount < 0 {
+		panic("Cannot convert negative currency")
 	}
+	return to, from, amount
 }
-
-func chooseCurrency(currencyCode string) string {
-	return ""
-}
-
 func getCurrencyMap() map[string]string {
 	currencyMap := map[string]string{
 		"GBP": "Pound Sterling",
@@ -60,6 +69,10 @@ func getCurrencyMap() map[string]string {
 	}
 	return currencyMap
 }
+
+// func getCurrencyNames(from string, to string) (string, string) {
+
+// }
 
 func getCurrencyExchangeRateMap() map[string]map[string]float64 {
 	exchangeRateMap := make(map[string]map[string]float64)
